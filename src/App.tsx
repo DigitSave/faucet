@@ -25,7 +25,7 @@ function App() {
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
       </div>
-      <p className="read-the-docs text-red-400">
+      <p className="read-the-docs text-red-400 font-swiss">
         Click on the Vite and React logos to learn more
       </p>
     </>

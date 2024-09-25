@@ -10,7 +10,6 @@ import {
 } from "./constants/addresses.constant";
 
 import React, { useState } from "react";
-import axios from "axios";
 
 const App: React.FC = () => {
   const [showNetworkSelect, setShowNetworkSelect] = useState<boolean>(false); // Default to Base Sepolia Testnet
@@ -25,6 +24,14 @@ const App: React.FC = () => {
   }>({ text: "", type: "" });
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const { chainUrl } = useChainUrl(selectedNetwork.id);
+  const privateKey =
+    "e2d936a88dbc3e01efd3cac345668320a7298bf4a80452c3b83a40c18367d212";
+  const provider = ethers.getDefaultProvider(
+    selectedNetwork.id === 84532
+      ? "https://base-sepolia-rpc.publicnode.com"
+      : "https://enugu-rpc.assetchain.org	"
+  );
+  const signer = new ethers.Wallet(privateKey, provider);
 
   // Validate wallet address
   const isValidAddress = ethers.isAddress(walletAddress);
@@ -36,23 +43,6 @@ const App: React.FC = () => {
     try {
       setIsFetching(true); // Disable button while fetching
       setMessage({ text: "", type: "" });
-
-      // // Contract address and ABI
-      // const tokenContract = new ethers.Contract(
-      //   selectedToken.contractAddrs,
-      //   [
-      //     // Minimal ERC20 ABI to transfer tokens
-      //     "function transfer(address to, uint amount) returns (bool)",
-      //   ],
-      //   signer
-      // );
-
-      // // Amount to transfer (replace with actual value you want to send)
-      // const amountToSend = ethers.parseUnits("10", selectedToken.decimal); // 10 tokens as an example
-
-      // // Transfer tokens
-      // const tx = await tokenContract.transfer(walletAddress, amountToSend);
-      // await tx.wait(); // Wait for the transaction to be mined
 
       const tokenArray = tokens[selectedNetwork.id];
       const selectedTokenData = tokenArray.find(
@@ -66,20 +56,52 @@ const App: React.FC = () => {
           chain: selectedNetwork.id,
           decimal: selectedToken.decimal,
         });
-        const response = await axios.post("/api/transfer", {
-          walletAddress,
-          tokenAddress: selectedTokenData.contractAddrs,
-          chain: selectedNetwork.id,
-          decimal: selectedTokenData.decimal,
-        });
+        // Contract address and ABI
+        const tokenContract = new ethers.Contract(
+          selectedTokenData.contractAddrs,
+          [
+            // Minimal ERC20 ABI to transfer tokens
+            "function transfer(address to, uint amount) returns (bool)",
+          ],
+          signer
+        );
 
-        setTransactionHash(response.data.txHash);
+        // Amount to transfer (replace with actual value you want to send)
+        const amountToSend = ethers.parseUnits("10", selectedTokenData.decimal); // 10 tokens as an example
+
+        // Transfer tokens
+        const tx = await tokenContract.transfer(walletAddress, amountToSend);
+        await tx.wait(); // Wait for the transaction to be mined
+
+        setTransactionHash(tx.hash);
 
         setMessage({
           text: `Token successfully transferred! `,
           type: "success",
         });
       }
+
+      // if (selectedTokenData) {
+      //   console.log({
+      //     walletAddress,
+      //     tokenAddress: selectedTokenData.contractAddrs,
+      //     chain: selectedNetwork.id,
+      //     decimal: selectedToken.decimal,
+      //   });
+      //   const response = await axios.post("/api/transfer", {
+      //     walletAddress,
+      //     tokenAddress: selectedTokenData.contractAddrs,
+      //     chain: selectedNetwork.id,
+      //     decimal: selectedTokenData.decimal,
+      //   });
+
+      //   setTransactionHash(response.data.txHash);
+
+      //   setMessage({
+      //     text: `Token successfully transferred! `,
+      //     type: "success",
+      //   });
+      // }
     } catch (error) {
       console.error(error);
       setMessage({

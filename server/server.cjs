@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const PORT = 3000; // or any port you prefer
+const PORT = process.env.PORT || 3000; // or any port you prefer
 
 app.post('/api/transfer', async (req, res) => {
   try {
@@ -54,5 +54,5 @@ const provider = ethers.getDefaultProvider(
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on Port ${PORT}`);
 });

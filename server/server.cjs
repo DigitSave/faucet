@@ -42,7 +42,7 @@ const provider = ethers.getDefaultProvider(
 
       // Transfer tokens
       const tx = await tokenContract.transfer(walletAddress, amountToSend);
-      await tx.wait(2); // Wait for the transaction to be mined
+      await tx.wait(); // Wait for the transaction to be mined
    
 
 

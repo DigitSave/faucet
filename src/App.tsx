@@ -1,15 +1,95 @@
+import { ethers } from "ethers";
 import { Token } from "./@types/assets.types";
 import Footer from "./components/template/Footer";
 import Header from "./components/template/Header";
-import { Network, networks, tokens } from "./constants/addresses.constant";
+import {
+  Network,
+  networks,
+  tokens,
+  useChainUrl,
+} from "./constants/addresses.constant";
 
 import React, { useState } from "react";
+import axios from "axios";
 
 const App: React.FC = () => {
   const [showNetworkSelect, setShowNetworkSelect] = useState<boolean>(false); // Default to Base Sepolia Testnet
   const [selectedToken, setSelectedToken] = useState<Token>(tokens[42421][0]);
   const [showTokenSelect, setShowTokenSelect] = useState<boolean>(false);
   const [selectedNetwork, setSelectedNetwork] = useState<Network>(networks[0]);
+  const [walletAddress, setWalletAddress] = useState<string>("");
+  const [isFetching, setIsFetching] = useState<boolean>(false); // Loading state for button
+  const [message, setMessage] = useState<{
+    text: string;
+    type: "success" | "error" | "";
+  }>({ text: "", type: "" });
+  const [transactionHash, setTransactionHash] = useState<string | null>(null);
+  const { chainUrl } = useChainUrl(selectedNetwork.id);
+
+  // Validate wallet address
+  const isValidAddress = ethers.isAddress(walletAddress);
+
+  // Handle token transfer
+  const handleTokenTransfer = async () => {
+    if (!isValidAddress) return;
+
+    try {
+      setIsFetching(true); // Disable button while fetching
+      setMessage({ text: "", type: "" });
+
+      // // Contract address and ABI
+      // const tokenContract = new ethers.Contract(
+      //   selectedToken.contractAddrs,
+      //   [
+      //     // Minimal ERC20 ABI to transfer tokens
+      //     "function transfer(address to, uint amount) returns (bool)",
+      //   ],
+      //   signer
+      // );
+
+      // // Amount to transfer (replace with actual value you want to send)
+      // const amountToSend = ethers.parseUnits("10", selectedToken.decimal); // 10 tokens as an example
+
+      // // Transfer tokens
+      // const tx = await tokenContract.transfer(walletAddress, amountToSend);
+      // await tx.wait(); // Wait for the transaction to be mined
+
+      const tokenArray = tokens[selectedNetwork.id];
+      const selectedTokenData = tokenArray.find(
+        (token) => token.name === selectedToken.name
+      );
+
+      if (selectedTokenData) {
+        console.log({
+          walletAddress,
+          tokenAddress: selectedTokenData.contractAddrs,
+          chain: selectedNetwork.id,
+          decimal: selectedToken.decimal,
+        });
+        const response = await axios.post("/api/transfer", {
+          walletAddress,
+          tokenAddress: selectedTokenData.contractAddrs,
+          chain: selectedNetwork.id,
+          decimal: selectedTokenData.decimal,
+        });
+
+        setTransactionHash(response.data.txHash);
+
+        setMessage({
+          text: `Token successfully transferred! `,
+          type: "success",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage({
+        text: "Failed to transfer token. ",
+        type: "error",
+      });
+    } finally {
+      setIsFetching(false); // Re-enable button after completion
+    }
+  };
 
   return (
     <div className="min-h-screen bg-tertiary-7 text-white font-swiss">
@@ -78,6 +158,7 @@ const App: React.FC = () => {
                             className={`w-full flex justify-between items-center border border-x-0 border-t-0 pb-4 border-b-tertiary-5 cursor-pointer `}
                             onClick={() => {
                               setSelectedNetwork(network);
+                              setShowNetworkSelect(!showNetworkSelect);
                             }}
                           >
                             <div
@@ -158,6 +239,7 @@ const App: React.FC = () => {
                             className={`w-full flex justify-between items-center border border-x-0 border-t-0 pb-4 border-b-tertiary-5 cursor-pointer `}
                             onClick={() => {
                               setSelectedToken(asset);
+                              setShowTokenSelect(!showTokenSelect);
                             }}
                           >
                             <div
@@ -189,6 +271,7 @@ const App: React.FC = () => {
               </div>
             </div>
 
+            {/* Address Section */}
             <div className="mb-6">
               <label className="block text-lg mb-2">Address</label>
               <div className="flex">
@@ -198,16 +281,63 @@ const App: React.FC = () => {
                       type="text"
                       placeholder="Enter your wallet address"
                       className="bg-tertiary-6 text-white px-4 py-4 w-full rounded-md outline-none ring-primary-5 focus:ring-1"
+                      value={walletAddress}
+                      onChange={(e) => setWalletAddress(e.target.value)}
                     />
                   </div>
                 </div>
               </div>
+
+              {!isValidAddress && walletAddress && (
+                <p className="text-red-500 text-sm mt-2">
+                  Please enter a valid wallet address.
+                </p>
+              )}
             </div>
 
             {/* fetch Button */}
-            <button className="w-full bg-primary-5 py-3 rounded-lg text-lg font-medium">
-              Get Tokens
+            <button
+              className={`w-full ${
+                !isValidAddress || isFetching
+                  ? "bg-primary-5 opacity-70 cursor-not-allowed"
+                  : "bg-primary-5"
+              }  py-3 rounded-lg text-lg font-medium`}
+              onClick={handleTokenTransfer}
+              disabled={!isValidAddress || isFetching}
+            >
+              {isFetching ? "Sending..." : `Get ${selectedToken?.name} Tokens `}
             </button>
+
+            {/* Message Block */}
+            {message.text && (
+              <div
+                className={`mt-4 p-4 rounded-lg ${
+                  message.type === "success" ? "bg-primary-4" : "bg-positive-5"
+                }`}
+              >
+                <p>{message.text}</p>
+                {message.type === "error" && (
+                  <a
+                    href={` https://t.me/+navP0XwBgIU1YjE0`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white underline"
+                  >
+                    Report this
+                  </a>
+                )}
+                {message.type === "success" && transactionHash && (
+                  <a
+                    href={`https://${chainUrl}/tx/${transactionHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white underline"
+                  >
+                    View on Explorer
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>

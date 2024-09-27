@@ -1,18 +1,6 @@
-import { useState } from "react";
 import { GithubIcon, TwitterIcon, YoutubeIcon, LinkedinIcon } from "../icons";
 
 export default function Footer() {
-  const [showTooltip, setShowTooltip] = useState(false);
-
-  // Function to handle the tooltip display
-  const handleSwapClick = () => {
-    setShowTooltip(true);
-    // Hide tooltip after 3 seconds
-    setTimeout(() => {
-      setShowTooltip(false);
-    }, 3000);
-  };
-
   return (
     <section className="w-full sm:px-10 px-6 md:px-20 pt-16 bg-tertiary-8">
       <div className="flex w-full justify-between mb-8 items-center">
@@ -44,19 +32,6 @@ export default function Footer() {
               >
                 Learn
               </a>
-
-              <button
-                onClick={handleSwapClick}
-                className="relative cursor-pointer hover:text-white transition-colors duration-300"
-              >
-                Swap
-                {/* Tooltip */}
-                {showTooltip && (
-                  <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 bg-black text-white text-sm py-2 px-4 rounded-lg">
-                    Coming soon
-                  </div>
-                )}
-              </button>
             </ul>
           </nav>
         </div>

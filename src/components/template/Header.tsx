@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "../icons";
 
 export default function Header() {
-  const [showTooltip, setShowTooltip] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
 
@@ -20,14 +19,6 @@ export default function Header() {
     };
   }, [scrolled]);
 
-  // Function to handle the tooltip display
-  const handleSwapClick = () => {
-    setShowTooltip(true);
-    // Hide tooltip after 3 seconds
-    setTimeout(() => {
-      setShowTooltip(false);
-    }, 3000);
-  };
   return (
     <>
       <header
@@ -56,19 +47,6 @@ export default function Header() {
           >
             Learn
           </a>
-
-          <button
-            onClick={handleSwapClick}
-            className="relative px-4 py-2 hover:text-gray-400"
-          >
-            Swap
-            {/* Tooltip */}
-            {showTooltip && (
-              <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 bg-black text-white text-sm py-2 px-4 rounded-lg">
-                Coming soon
-              </div>
-            )}
-          </button>
         </nav>
         <button onClick={() => setNavOpen(!navOpen)} className="md:hidden">
           {navOpen ? <CloseIcon /> : <HamburgerIcon />}
@@ -101,19 +79,6 @@ export default function Header() {
               >
                 Learn
               </a>
-
-              <button
-                onClick={handleSwapClick}
-                className="relative cursor-pointer hover:text-white transition-colors duration-300 text-left md:text-center"
-              >
-                Swap
-                {/* Tooltip */}
-                {showTooltip && (
-                  <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 bg-black text-white text-sm py-2 px-4 rounded-lg ">
-                    Coming soon
-                  </div>
-                )}
-              </button>
             </ul>
           </div>
         </div>
